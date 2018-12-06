@@ -49,6 +49,25 @@ class Messages(commands.Cog):
     async def on_message_delete(self, message):
         if not message.author.bot and isinstance(message.channel, discord.TextChannel):
             self.db_delete(message)    
+    
+    @commands.command()
+    @checks.is_owner()
+    async def message_grab_channel(self, ctx, chan:discord.TextChannel):
+        c = self.conn.cursor()
+        messages = await chan.history(limit=None, after=None, before=None).flatten()
+        for message in messages:
+            if message.author.bot:
+                continue
+            try:
+                c.execute("INSERT INTO '{}'(channel_id, message_id, author_id, date, content)\
+                          VALUES (?, ?, ?, ?, ?)".format(message.guild.id),
+                          (message.channel.id, message.id, message.author.id,
+                           dt.datetime.now(), message.clean_content))
+            except:
+                pass
+            
+        self.conn.commit()
+        c.close()
             
     def db_insert(self, message):
         c = self.conn.cursor()
