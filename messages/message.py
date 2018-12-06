@@ -37,10 +37,21 @@ class Messages(commands.Cog):
     def __unload(self):
         del self.bot.cogs_messages
         self.conn.close()
-        
+                
+    async def on_message(self, message):
+        if not message.author.bot and isinstance(message.channel, discord.TextChannel):
+            self.db_insert(message)
+            
+    async def on_message_edit(self, before, after):
+        if not after.author.bot and isinstance(after.channel, discord.TextChannel):
+            self.db_update(after)
+            
+    async def on_message_delete(self, message):
+        if not message.author.bot and isinstance(message.channel, discord.TextChannel):
+            self.db_delete(message)    
+            
     def db_insert(self, message):
         c = self.conn.cursor()
-        print((message.channel.id, message.id, message.author.id,message.created_at, message.clean_content))
         c.execute("INSERT INTO '{}'(channel_id, message_id, author_id, date, content)\
                   VALUES (?, ?, ?, ?, ?)".format(message.guild.id),
                   (message.channel.id, message.id, message.author.id,
@@ -70,15 +81,3 @@ class Messages(commands.Cog):
                   AND revision_count=?".format(message.guild.id), (message.id, last_rev))
         self.conn.commit()
         c.close()
-        
-    async def on_message(self, message):
-        if not message.author.bot and isinstance(message.channel, discord.TextChannel):
-            self.db_insert(message)
-            
-    async def on_message_edit(self, before, after):
-        if not after.author.bot and isinstance(after.channel, discord.TextChannel):
-            self.db_update(after)
-            
-    async def on_message_delete(self, message):
-        if not message.author.bot and isinstance(message.channel, discord.TextChannel):
-            self.db_delete(message)
