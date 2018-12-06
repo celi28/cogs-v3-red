@@ -68,6 +68,7 @@ class Messages(commands.Cog):
             
         self.conn.commit()
         c.close()
+        await ctx.send('Done')
             
     def db_insert(self, message):
         c = self.conn.cursor()
