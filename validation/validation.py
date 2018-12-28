@@ -223,7 +223,8 @@ class Validation(commands.Cog):
         message = '```json\n{}```'.format(data_str)
         await ctx.send(message)
 
-    def check_if_entrance(self, ctx):
+    @staticmethod
+    def check_if_entrance(ctx):
         return ctx.channel.id == "460923611625291787"
 
     @commands.command()
