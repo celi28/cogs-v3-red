@@ -223,10 +223,6 @@ class Validation(commands.Cog):
         message = '```json\n{}```'.format(data_str)
         await ctx.send(message)
 
-    @staticmethod
-    def check_if_entrance(ctx):
-        return ctx.channel.id == "460923611625291787"
-
     @commands.command()
     @checks.mod_or_permissions(administrator=True)
     @commands.check(check_if_entrance)
@@ -351,3 +347,7 @@ class Validation(commands.Cog):
                 return False
         except AttributeError:
             return False
+
+
+def check_if_entrance(ctx):
+    return ctx.channel.id == "460923611625291787"
