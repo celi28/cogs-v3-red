@@ -10,6 +10,7 @@ class Abort(Exception):
 
 class Validation(commands.Cog):
     def __init__(self, bot):
+        super().__init__()
         self.bot = bot
         self.config = Config.get_conf(self, identifier=20181201)
         default_guild = {
@@ -71,6 +72,7 @@ class Validation(commands.Cog):
     async def on_member_join(self, member):
         keywords = {"SERVER": member.guild, "MEMBER": member.mention}
         message = (await self.config.guild(member.guild).message_validation()).format(**keywords)
+        message += " ({})".format((dt.datetime.now() - member.created_at).days)
         await self.bot.get_channel(await self.config.guild(member.guild).entrance_channel()).send(message)
         
     async def on_member_remove(self, member):
@@ -329,9 +331,7 @@ class Validation(commands.Cog):
             await self.bot.get_channel(await self.config.guild(member.guild).archive_channel()).send(message)
 
     async def _is_mod(self, member: discord.Member):
-        if not isinstance(member, discord.Member):
+        if len(member.roles) > 1:
+            return True
+        else:
             return False
-        
-        mod_role = await self.bot.db.guild(member.guild).mod_role()
-#        admin_role = await self.bot.db.guild(member.guild).admin_role()
-        return discord.utils.get(member.roles, id=mod_role) is not None
