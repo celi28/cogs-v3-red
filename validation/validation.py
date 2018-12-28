@@ -225,7 +225,7 @@ class Validation(commands.Cog):
 
     @commands.command()
     @checks.mod_or_permissions(administrator=True)
-    @commands.check(check_if_entrance)
+    @check_if_entrance()
     async def aval(self, ctx, member: discord.Member, *roles):
         """Accept a member in entrance channel."""
         if await self._is_mod(member):
@@ -264,7 +264,7 @@ class Validation(commands.Cog):
 
     @commands.command()
     @checks.mod_or_permissions(administrator=True)
-    @commands.check(check_if_entrance)
+    @check_if_entrance()
     async def aban(self, ctx, member: discord.Member, reason: str = None):
         """Ban a member in entrance channel."""
         if await self._is_mod(member):
@@ -349,5 +349,8 @@ class Validation(commands.Cog):
             return False
 
 
-def check_if_entrance(ctx):
-    return ctx.channel.id == "460923611625291787"
+def check_if_entrance():
+    def predicate(ctx):
+        return ctx.channel.id == 460923611625291787
+
+    return commands.check(predicate)
