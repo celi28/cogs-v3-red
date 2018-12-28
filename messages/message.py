@@ -62,7 +62,7 @@ class Messages(commands.Cog):
                 c.execute("INSERT INTO '{}'(channel_id, message_id, author_id, date, content)\
                           VALUES (?, ?, ?, ?, ?)".format(message.guild.id),
                           (message.channel.id, message.id, message.author.id,
-                           dt.datetime.now(), message.clean_content))
+                           message.created_at, message.clean_content))
             except:
                 pass
             
