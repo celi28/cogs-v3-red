@@ -1,12 +1,14 @@
-from redbot.core import Config, checks, commands, utils
-import datetime as dt
-import discord
 import asyncio
+import datetime as dt
 import json
+
+import discord
+from redbot.core import Config, checks, commands, utils
 
 
 class Abort(Exception):
     pass
+
 
 class Validation(commands.Cog):
     def __init__(self, bot):
@@ -27,7 +29,7 @@ class Validation(commands.Cog):
         }
         self.config.register_guild(**default_guild)
         self.background_task = self.bot.loop.create_task(self._daemon())
-        
+
     def __unload(self):
         if self.background_task:
             self.background_task.cancel()
@@ -74,17 +76,17 @@ class Validation(commands.Cog):
         message = (await self.config.guild(member.guild).message_validation()).format(**keywords)
         message += " ({})".format((dt.datetime.now() - member.created_at).days)
         await self.bot.get_channel(await self.config.guild(member.guild).entrance_channel()).send(message)
-        
+
     async def on_member_remove(self, member):
-        if len(member.roles) > 1: # The member always have @everyone role. So 2 not 1
+        if len(member.roles) > 1:  # The member always have @everyone role. So 2 not 1
             return
         messages = await self._find_related_msg(member)
         if len(messages) > 0:
             if len([m for m in messages if m.author == member]) > 0:
                 await self._backup_msg(messages, "Kick/Leave", member, self.bot.user)
-            await self.bot.get_channel(await self.config.guild(member.guild).entrance_channel()).delete_messages(messages)
-            
-                            
+            await self.bot.get_channel(await self.config.guild(member.guild).entrance_channel()).delete_messages(
+                messages)
+
     @commands.group()
     @commands.guild_only()
     @checks.admin_or_permissions(administrator=True)
@@ -138,10 +140,12 @@ class Validation(commands.Cog):
     @message.command(name="validation")
     async def val_setup_message_validation(self, ctx):
         """Setup the validation message."""
+
         def check(m):
             return m.author == ctx.author and m.channel == ctx.channel
-        instructions = "You have 2 minutes to post in the next message the content of the validation message.\n"\
-        + "You can enter `{SERVER}` for server name, `{MEMBER}` for member name, or `abort` to abort"
+
+        instructions = "You have 2 minutes to post in the next message the content of the validation message.\n" \
+                       + "You can enter `{SERVER}` for server name, `{MEMBER}` for member name, or `abort` to abort"
         instructions_msg = await ctx.send(instructions)
         try:
             message = await self.bot.wait_for('message', check=check, timeout=120)
@@ -163,8 +167,10 @@ class Validation(commands.Cog):
     @message.command(name="welcome")
     async def val_setup_message_welcome(self, ctx):
         """Setup the welcome message."""
+
         def check(m):
             return m.author == ctx.author and m.channel == ctx.channel
+
         instructions = "You have 2 minutes to post in the next message the content of the welcome message"
         instructions_msg = await ctx.send(instructions)
         try:
@@ -191,23 +197,23 @@ class Validation(commands.Cog):
 
         message = "Setup role configured on {}".format(role)
         await ctx.send(message)
-        
+
     @role.group(name="optional")
     async def val_setup_role_optional(self, ctx):
         pass
-    
+
     @val_setup_role_optional.command(name="set")
-    async def val_setup_role_optional_set(self, ctx, role:discord.Role, *tags):
+    async def val_setup_role_optional_set(self, ctx, role: discord.Role, *tags):
         for tag in tags:
             await self.config.guild(ctx.guild).set_raw('optional_roles', tag, value=role.id)
         await ctx.send("Mapped {} role on tags {}".format(role, " ".join(tags)))
-    
+
     @val_setup_role_optional.command(name="del")
     async def val_setup_role_optional_del(self, ctx, *tags):
         for tag in tags:
             await self.config.guild(ctx.guild).clear_raw('optional_roles', tag)
         await ctx.send("Del tags: {}".format(" ".join(tags)))
-    
+
     @val_setup_role_optional.command(name="get")
     async def val_setup_role_optional_get(self, ctx, *tags):
         data = await self.config.guild(ctx.guild).get_raw('optional_roles', *tags)
@@ -216,9 +222,13 @@ class Validation(commands.Cog):
             data_str = data_str.replace(str(role.id), role.name)
         message = '```json\n{}```'.format(data_str)
         await ctx.send(message)
-    
+
+    def check_if_entrance(self, ctx):
+        return ctx.channel.id == "460923611625291787"
+
     @commands.command()
     @checks.mod_or_permissions(administrator=True)
+    @commands.check(check_if_entrance)
     async def aval(self, ctx, member: discord.Member, *roles):
         """Accept a member in entrance channel."""
         if await self._is_mod(member):
@@ -257,7 +267,8 @@ class Validation(commands.Cog):
 
     @commands.command()
     @checks.mod_or_permissions(administrator=True)
-    async def aban(self, ctx, member: discord.Member, reason: str=None):
+    @commands.check(check_if_entrance)
+    async def aban(self, ctx, member: discord.Member, reason: str = None):
         """Ban a member in entrance channel."""
         if await self._is_mod(member):
             message_usr = '{} : Action non valide (membre du staff)'.format(
@@ -283,13 +294,14 @@ class Validation(commands.Cog):
     async def _find_related_msg(self, member):
         bool_firstmsg, only_user = True, True
         related_msg = []
-        async for msg in self.bot.get_channel(await self.config.guild(member.guild).entrance_channel()).history(reverse=True):
+        async for msg in self.bot.get_channel(await self.config.guild(member.guild).entrance_channel()).history(
+                reverse=True):
             if bool_firstmsg:
                 if msg.author == self.bot.user:
                     if member.id in msg.raw_mentions:
-#                    if member in msg.mentions:
+                        #                    if member in msg.mentions:
                         related_msg.append(msg)
-                        bool_firstmsg = False       
+                        bool_firstmsg = False
                 elif msg.author == member:
                     related_msg.append(msg)
                     bool_firstmsg = False
@@ -306,13 +318,13 @@ class Validation(commands.Cog):
                 else:
                     if await self._is_mod(msg.author):
                         if member.id in msg.raw_mentions:
-#                        if member in msg.mentions:
+                            #                        if member in msg.mentions:
                             related_msg.append(msg)
         return related_msg
 
     async def _backup_msg(self, messages, action: str, member: discord.Member, staff):
         message_to_post = '# DEBUT - Action: ' + action + ' - Membre: {} ({})'.format(member, member.id) \
-            + ' - Modérateur: {} ({})\n\n'.format(staff, staff.id)
+                          + ' - Modérateur: {} ({})\n\n'.format(staff, staff.id)
 
         for msg in messages:
             if await self._is_mod(msg.author):
@@ -320,10 +332,10 @@ class Validation(commands.Cog):
             else:
                 tmp = '<' + str(msg.author)[:-5] + '> :\n'
             tmp += msg.clean_content + '\n\n'
-            
+
             message_to_post += tmp
         message_to_post += '# FIN'
-        
+
         messages_to_post = utils.chat_formatting.pagify(message_to_post, "\n<", shorten_by=10)
 
         for message in messages_to_post:
@@ -331,7 +343,10 @@ class Validation(commands.Cog):
             await self.bot.get_channel(await self.config.guild(member.guild).archive_channel()).send(message)
 
     async def _is_mod(self, member: discord.Member):
-        if len(member.roles) > 1:
-            return True
-        else:
+        try:
+            if len(member.roles) > 1:
+                return True
+            else:
+                return False
+        except AttributeError:
             return False
