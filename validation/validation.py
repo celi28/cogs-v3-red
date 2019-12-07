@@ -71,12 +71,14 @@ class Validation(commands.Cog):
 
             await asyncio.sleep(600)
 
+    @commands.Cog.listener()
     async def on_member_join(self, member):
         keywords = {"SERVER": member.guild, "MEMBER": member.mention}
         message = (await self.config.guild(member.guild).message_validation()).format(**keywords)
         message += " ({})".format((dt.datetime.now() - member.created_at).days)
         await self.bot.get_channel(await self.config.guild(member.guild).entrance_channel()).send(message)
 
+    @commands.Cog.listener()
     async def on_member_remove(self, member):
         if len(member.roles) > 1:  # The member always have @everyone role. So 2 not 1
             return
@@ -290,7 +292,7 @@ class Validation(commands.Cog):
         bool_firstmsg, only_user = True, True
         related_msg = []
         async for msg in self.bot.get_channel(await self.config.guild(member.guild).entrance_channel()).history(
-                reverse=True):
+                oldest_first=True):
             if bool_firstmsg:
                 if msg.author == self.bot.user:
                     if member.id in msg.raw_mentions:
